@@ -1,0 +1,12 @@
+{
+  "name": "clawd-buddy",
+  "owner": { "name": "prabowosd" },
+  "description": "A small mascot and status band for Claude Code",
+  "plugins": [
+    {
+      "name": "clawd-buddy",
+      "source": "./plugins/clawd-buddy",
+      "description": "A small Claude Code mascot above the prompt, with usage, context, cache, directory and git status"
+    }
+  ]
+}
