@@ -21,7 +21,7 @@ test('a one row band still draws the top row of the mascot', async $ => {
     component: 'AbovePrompt',
     props: { hasSurvey: false, isWorking: true, maxRows: 1 } as never,
   })
-  expect(await ui.find({ type: 'Text', text: /▀/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /[▐▟]/ })).toBeDefined()
   await ui.unmount()
 })
 

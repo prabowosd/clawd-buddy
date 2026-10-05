@@ -2,14 +2,14 @@
 
 A small mascot and a two line status band above the Claude Code prompt.
 
-The left side shows how much of your usage window is gone, how full the context is, how long the prompt cache stays warm, which directory you are in, and the git state of that directory. The right side is a small mascot that blinks while idle and waves while Claude works.
+The left side shows how much of your usage window is gone, how full the context is, how long the prompt cache stays warm, which directory you are in, and the git state of that directory. The right side is a small mascot that blinks while idle and waves while Claude works. It is three rows tall, so the band is three rows too.
 
 ```
 5h ━━────  3%   7d ━─────  7%   ctx 30%   cache 59:12
 ~/www/app   main ~1 ?2 ↑1 wt:app-topic
 ```
 
-The mascot is drawn with half-block characters and 24-bit colour, so there are no images and nothing to download.
+The mascot is the same one Claude Code draws at startup, in quadrant-block characters and 24-bit colour, so there are no images and nothing to download.
 
 ## Install
 

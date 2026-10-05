@@ -4,10 +4,9 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { Ctx, GitInfo, Limit, Mood, Picture } from '../types'
 import { parseGit, parseWorktree, shortPath } from './git'
 import { asAbsolute, drawsImages, imagesToOpen, isPng } from './images'
-import { BODY_W, sprite } from './sprite'
+import { BODY, BODY_W, sprite } from './sprite'
 import { AMBER, GREEN, bar, clockText, levelColor, shortModel, windowText } from './stats'
 
-const BODY = '#D97757'
 
 const mood = atom({ plugin: 'clawd-buddy', key: 'mood' } as const, 'idle' as Mood)
 const moodAt = atom({ plugin: 'clawd-buddy', key: 'moodAt' } as const, 0)
