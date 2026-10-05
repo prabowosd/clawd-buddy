@@ -185,13 +185,15 @@ export const register: Register = on => {
     const dir = await read($, cwd)
     const g = await read($, git)
     const modelName = await read($, model)
+    // A third row needs the band to be 3 rows tall; otherwise the model joins the second row.
+    const modelOwnRow = e.props.maxRows >= 3
+    const modelText = modelName === '' ? null : <Text color={BODY}>{shortModel(modelName)}</Text>
     const isClean = g !== null && g.staged + g.modified + g.untracked === 0
 
     return (
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" paddingX={1}>
         <Box flexDirection="column">
         <Box flexDirection="row" gap={3}>
-          {modelName !== '' && <Text color={BODY}>{shortModel(modelName)}</Text>}
           {meters.map(s => (
             <Text key={s.kind}>
               <Text dimColor>{s.label} </Text>
@@ -233,7 +235,9 @@ export const register: Register = on => {
               {g.behind > 0 ? <Text dimColor> ↓{g.behind}</Text> : null}
             </Text>
           )}
+          {modelOwnRow ? null : modelText}
         </Box>
+        {modelOwnRow ? modelText : null}
         </Box>
         <Box width={BODY_W} flexDirection="column">
           {shownRows.map((row, i) => (
