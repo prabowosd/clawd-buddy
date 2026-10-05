@@ -17,6 +17,7 @@ declare module 'claude-code' {
       git: GitInfo | null
       picture: Picture | null
       model: string
+      effort: string
     }
   }
 }

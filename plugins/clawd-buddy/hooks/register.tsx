@@ -5,7 +5,7 @@ import type { Ctx, GitInfo, Limit, Mood, Picture } from '../types'
 import { parseGit, parseWorktree, shortPath } from './git'
 import { asAbsolute, drawsImages, imagesToOpen, isPng } from './images'
 import { BODY_W, sprite } from './sprite'
-import { AMBER, GREEN, bar, clockText, levelColor, shortModel } from './stats'
+import { AMBER, GREEN, bar, clockText, levelColor, shortModel, windowText } from './stats'
 
 const BODY = '#D97757'
 
@@ -19,6 +19,7 @@ const cwd = atom({ plugin: 'clawd-buddy', key: 'cwd' } as const, '')
 const git = atom({ plugin: 'clawd-buddy', key: 'git' } as const, null as GitInfo | null)
 const picture = atom({ plugin: 'clawd-buddy', key: 'picture' } as const, null as Picture | null)
 const model = atom({ plugin: 'clawd-buddy', key: 'model' } as const, '')
+const effort = atom({ plugin: 'clawd-buddy', key: 'effort' } as const, '')
 
 const PANE = 'clawd-image'
 
@@ -101,6 +102,12 @@ export const register: Register = on => {
       await update($, cacheAt, () => t)
     }
     return next(e)
+  })
+
+  // The main loop's effort, read off each model request; a subagent's own is left out.
+  on('turn.step', async function* ($, e, next) {
+    if (!e.agentId && e.effort !== undefined) await update($, effort, () => String(e.effort))
+    return yield* next(e)
   })
 
   on('turn.start', async ($, e, next) => {
@@ -187,7 +194,15 @@ export const register: Register = on => {
     const modelName = await read($, model)
     // A third row needs the band to be 3 rows tall; otherwise the model joins the second row.
     const modelOwnRow = e.props.maxRows >= 3
-    const modelText = modelName === '' ? null : <Text color={BODY}>{shortModel(modelName)}</Text>
+    const effortName = await read($, effort)
+    const detail = [c?.window ? windowText(c.window) : '', effortName].filter(Boolean).join(' · ')
+    const modelText =
+      modelName === '' ? null : (
+        <Text>
+          <Text color={BODY}>{shortModel(modelName)}</Text>
+          {detail === '' ? null : <Text dimColor> · {detail}</Text>}
+        </Text>
+      )
     const isClean = g !== null && g.staged + g.modified + g.untracked === 0
 
     return (

@@ -33,7 +33,7 @@ It was built and tested on Claude Code 2.1.289, on macOS, in a terminal. The ban
 
 | Item | Meaning |
 | --- | --- |
-| model | The main loop's model, as `/model` shows it, in the mascot's colour on its own row under the directory and git state. A band with room for only two rows puts it at the end of the second row. The id is shortened, so `claude-opus-4-8[1m]` reads `Opus 4.8 1M`. A name that is no known family is cut at 28 characters. |
+| model | The main loop's model, as `/model` shows it, in the mascot's colour on its own row under the directory and git state, then the context window and the effort level in grey: `Opus 4.8 · 1M · high`. The id is shortened, so `claude-opus-4-8[1m]` reads `Opus 4.8`, and a name that is no known family is cut at 28 characters. The effort shows after the first request of the session. A band with room for only two rows puts all of it at the end of the second row. |
 | `5h`, `7d` | Rate limit usage for the 5 hour and 7 day windows, as a bar and a percentage. Green below 70%, amber from 70%, red from 90%. A dash means Claude Code has not reported a value yet. |
 | `ctx` | Share of the context window in use, coloured the same way. |
 | `cache` | Countdown of the prompt cache. It restarts after each response and turns amber in the last minute. `cold` means it has expired or nothing has been sent yet. |
