@@ -12,7 +12,9 @@ export function asAbsolute(dir: string, file: string): string {
   return file.startsWith('/') ? file : `${dir.replace(/\/$/, '')}/${file}`
 }
 
-// Only kitty and Ghostty draw an Image element; elsewhere it would show its alt text.
-export function drawsImages(env: { program: string; term: string; kitty: string }): boolean {
+// Only kitty and Ghostty draw an Image element. CLAWD_BUDDY_IMAGES=pane or viewer overrides the guess.
+export function drawsImages(env: { program: string; term: string; kitty: string; force?: string }): boolean {
+  if (env.force === 'pane') return true
+  if (env.force === 'viewer') return false
   return env.kitty !== '' || /ghostty|kitty/i.test(`${env.program} ${env.term}`)
 }

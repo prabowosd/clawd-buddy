@@ -5,7 +5,7 @@ import type { Ctx, GitInfo, Limit, Mood, Picture } from '../types'
 import { parseGit, parseWorktree, shortPath } from './git'
 import { asAbsolute, drawsImages, imagesToOpen, isPng } from './images'
 import { BODY_W, sprite } from './sprite'
-import { AMBER, GREEN, bar, clockText, levelColor } from './stats'
+import { AMBER, GREEN, bar, clockText, levelColor, shortModel } from './stats'
 
 const BODY = '#D97757'
 
@@ -18,6 +18,7 @@ const limits = atom({ plugin: 'clawd-buddy', key: 'limits' } as const, [] as Lim
 const cwd = atom({ plugin: 'clawd-buddy', key: 'cwd' } as const, '')
 const git = atom({ plugin: 'clawd-buddy', key: 'git' } as const, null as GitInfo | null)
 const picture = atom({ plugin: 'clawd-buddy', key: 'picture' } as const, null as Picture | null)
+const model = atom({ plugin: 'clawd-buddy', key: 'model' } as const, '')
 
 const PANE = 'clawd-image'
 
@@ -43,11 +44,21 @@ async function refreshGit($: EngineInterface) {
   }
 }
 
+// The model as /model shows it; a failed read keeps the last name.
+async function refreshModel($: EngineInterface) {
+  try {
+    const name = await $.session.model()
+    await update($, model, () => name)
+  } catch {
+    // keep what is shown
+  }
+}
+
 async function terminalDraws($: EngineInterface) {
   try {
-    const r = await $.process.run(['sh', '-c', 'printf "%s|%s|%s" "$TERM_PROGRAM" "$TERM" "$KITTY_WINDOW_ID"'], { timeoutMs: 2_000 })
-    const [program = '', term = '', kitty = ''] = r.stdout.split('|')
-    return drawsImages({ program, term, kitty })
+    const r = await $.process.run(['sh', '-c', 'printf "%s|%s|%s|%s" "$TERM_PROGRAM" "$TERM" "$KITTY_WINDOW_ID" "$CLAWD_BUDDY_IMAGES"'], { timeoutMs: 2_000 })
+    const [program = '', term = '', kitty = '', force = ''] = r.stdout.split('|')
+    return drawsImages({ program, term, kitty, force })
   } catch {
     return false
   }
@@ -76,8 +87,9 @@ export const register: Register = on => {
       const t = await $.clock.now()
       await update($, now, () => t)
     })
-    $.clock.every(GIT_REFRESH_MS, () => refreshGit($))
+    $.clock.every(GIT_REFRESH_MS, () => Promise.all([refreshGit($), refreshModel($)]))
     void refreshGit($)
+    void refreshModel($)
     return next(e)
   })
 
@@ -93,6 +105,7 @@ export const register: Register = on => {
 
   on('turn.start', async ($, e, next) => {
     await update($, mood, () => 'working' as Mood)
+    void refreshModel($)
     return next(e)
   })
 
@@ -102,6 +115,7 @@ export const register: Register = on => {
     await update($, moodAt, () => t)
     await update($, mood, () => (e.isAborted || e.reason === 'error' ? 'idle' : 'done') as Mood)
     void refreshGit($)
+    void refreshModel($)
     return next(e)
   })
 
@@ -170,12 +184,14 @@ export const register: Register = on => {
     ].map(s => ({ ...s, lim: rl.find(l => l.kind === s.kind) }))
     const dir = await read($, cwd)
     const g = await read($, git)
+    const modelName = await read($, model)
     const isClean = g !== null && g.staged + g.modified + g.untracked === 0
 
     return (
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" paddingX={1}>
         <Box flexDirection="column">
         <Box flexDirection="row" gap={3}>
+          {modelName !== '' && <Text color={BODY}>{shortModel(modelName)}</Text>}
           {meters.map(s => (
             <Text key={s.kind}>
               <Text dimColor>{s.label} </Text>

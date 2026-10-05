@@ -1,3 +1,5 @@
+export const shortModel = (name: string): string => (name.length > 28 ? `${name.slice(0, 27)}…` : name)
+
 export const GREEN = '#4cc35a'
 export const AMBER = '#e5a33a'
 export const RED = '#e5534b'

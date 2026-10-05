@@ -33,6 +33,7 @@ It was built and tested on Claude Code 2.1.289, on macOS, in a terminal. The ban
 
 | Item | Meaning |
 | --- | --- |
+| model | The main loop's model, as `/model` shows it, in the mascot's colour at the start of the first row. Long names are cut at 28 characters. |
 | `5h`, `7d` | Rate limit usage for the 5 hour and 7 day windows, as a bar and a percentage. Green below 70%, amber from 70%, red from 90%. A dash means Claude Code has not reported a value yet. |
 | `ctx` | Share of the context window in use, coloured the same way. |
 | `cache` | Countdown of the prompt cache. It restarts after each response and turns amber in the last minute. `cold` means it has expired or nothing has been sent yet. |
@@ -56,6 +57,8 @@ When Claude sends you an image with the `SendUserFile` tool (PNG, JPEG, GIF, Web
 
 - In a terminal that can draw pictures (kitty, Ghostty) the last image shows in an `Image` pane. A PNG is read as it is, anything else is converted once with `sips` into `/tmp/clawd-buddy`. Preview opens too, but only when Claude sent the file with `display: render`.
 - In any other terminal (Warp, iTerm, Terminal) every image opens in the default viewer with `open`, so on macOS it lands in Preview.
+
+To force the pane in a terminal that is not guessed right, start Claude Code with `CLAWD_BUDDY_IMAGES=pane`. `CLAWD_BUDDY_IMAGES=viewer` always uses the default viewer.
 
 Other files are left alone. If a viewer is missing or fails the file still reaches you and nothing is shown. Images are handled after the tool call succeeds. The pane needs a wide terminal to seat on its own, so on a narrow one it waits.
 

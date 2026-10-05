@@ -32,3 +32,8 @@ test('isPng matches the extension only', () => {
   expect(isPng('/a/Shot.PNG')).toBe(true)
   expect(isPng('/a/photo.jpg')).toBe(false)
 })
+
+test('CLAWD_BUDDY_IMAGES overrides the terminal guess', () => {
+  expect(drawsImages({ program: 'WarpTerminal', term: 'xterm-256color', kitty: '', force: 'pane' })).toBe(true)
+  expect(drawsImages({ program: 'ghostty', term: 'xterm-ghostty', kitty: '', force: 'viewer' })).toBe(false)
+})
