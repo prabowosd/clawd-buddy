@@ -52,7 +52,12 @@ The mascot has three moods: idle (blinks every couple of seconds), working (wave
 
 ## Images
 
-When Claude sends you an image with the `SendUserFile` tool, the plugin opens it in the default viewer with `open`, so on macOS it lands in Preview. PNG, JPEG, GIF, WebP, HEIC, BMP and TIFF count, at most five per call. Other files are left alone. If `open` is missing or fails the file still reaches you and nothing is shown. Only images sent after the tool call succeeds are opened.
+When Claude sends you an image with the `SendUserFile` tool (PNG, JPEG, GIF, WebP, HEIC, BMP or TIFF, at most five per call):
+
+- In a terminal that can draw pictures (kitty, Ghostty) the last image shows in an `Image` pane. A PNG is read as it is, anything else is converted once with `sips` into `/tmp/clawd-buddy`. Preview opens too, but only when Claude sent the file with `display: render`.
+- In any other terminal (Warp, iTerm, Terminal) every image opens in the default viewer with `open`, so on macOS it lands in Preview.
+
+Other files are left alone. If a viewer is missing or fails the file still reaches you and nothing is shown. Images are handled after the tool call succeeds. The pane needs a wide terminal to seat on its own, so on a narrow one it waits.
 
 ## Layout
 

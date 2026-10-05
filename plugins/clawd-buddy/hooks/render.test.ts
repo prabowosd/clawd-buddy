@@ -24,3 +24,15 @@ test('a one row band still draws the top row of the mascot', async $ => {
   expect(await ui.find({ type: 'Text', text: /▀/ })).toBeDefined()
   await ui.unmount()
 })
+
+test('the image pane says so when nothing was sent yet', async $ => {
+  const ui = await $.ui.mount({
+    plugin: 'clawd-buddy',
+    surface: 'terminal',
+    component: 'Pane',
+    requestId: 'clawd-image',
+    props: {} as never,
+  })
+  expect(await ui.find({ type: 'Text', text: /No image yet/ })).toBeDefined()
+  await ui.unmount()
+})

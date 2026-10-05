@@ -1,9 +1,9 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { Ctx, GitInfo, Limit, Mood } from '../types'
+import type { Ctx, GitInfo, Limit, Mood, Picture } from '../types'
 import { parseGit, parseWorktree, shortPath } from './git'
-import { imagesToOpen } from './images'
+import { asAbsolute, drawsImages, imagesToOpen, isPng } from './images'
 import { BODY_W, sprite } from './sprite'
 import { AMBER, GREEN, bar, clockText, levelColor } from './stats'
 
@@ -17,6 +17,9 @@ const ctx = atom({ plugin: 'clawd-buddy', key: 'ctx' } as const, null as Ctx | n
 const limits = atom({ plugin: 'clawd-buddy', key: 'limits' } as const, [] as Limit[])
 const cwd = atom({ plugin: 'clawd-buddy', key: 'cwd' } as const, '')
 const git = atom({ plugin: 'clawd-buddy', key: 'git' } as const, null as GitInfo | null)
+const picture = atom({ plugin: 'clawd-buddy', key: 'picture' } as const, null as Picture | null)
+
+const PANE = 'clawd-image'
 
 const BRANCH = '#8AB4F8'
 const WORKTREE = '#C792EA'
@@ -37,6 +40,29 @@ async function refreshGit($: EngineInterface) {
     await update($, git, () => (info ? { ...info, worktree: w.exitCode === 0 ? parseWorktree(w.stdout) : null } : null))
   } catch {
     await update($, git, () => null)
+  }
+}
+
+async function terminalDraws($: EngineInterface) {
+  try {
+    const r = await $.process.run(['sh', '-c', 'printf "%s|%s|%s" "$TERM_PROGRAM" "$TERM" "$KITTY_WINDOW_ID"'], { timeoutMs: 2_000 })
+    const [program = '', term = '', kitty = ''] = r.stdout.split('|')
+    return drawsImages({ program, term, kitty })
+  } catch {
+    return false
+  }
+}
+
+// The pane draws PNG only: anything else is converted once with sips into a temp file.
+async function pngFor($: EngineInterface, file: string) {
+  if (isPng(file)) return file
+  const out = `/tmp/clawd-buddy/${await $.clock.now()}.png`
+  try {
+    await $.process.run(['mkdir', '-p', '/tmp/clawd-buddy'], { timeoutMs: 2_000 })
+    const r = await $.process.run(['sips', '-s', 'format', 'png', file, '--out', out], { timeoutMs: 10_000 })
+    return r.exitCode === 0 ? out : null
+  } catch {
+    return null
   }
 }
 
@@ -79,18 +105,45 @@ export const register: Register = on => {
     return next(e)
   })
 
-  // Images Claude sends to the user open in the default viewer. Best effort: no viewer, no harm.
+  // Where the terminal can draw, a sent image shows in a pane and Preview opens only for display=render.
+  // Elsewhere every image opens in the default viewer. Best effort: no viewer, no harm.
   on('tool.call', { tool: 'SendUserFile' }, async ($, e, next) => {
     const sent = await next(e)
     const images = imagesToOpen(e.files)
-    if (sent.deny === undefined && sent.isError !== true && images.length) {
+    if (sent.deny !== undefined || sent.isError === true || images.length === 0) return sent
+
+    let viewer = images
+    if (await terminalDraws($)) {
+      const shown = asAbsolute(await $.session.cwd(), images[images.length - 1])
+      const png = await pngFor($, shown)
+      if (png) {
+        await update($, picture, p => ({ file: png, name: shown.split('/').pop() ?? shown, n: (p?.n ?? 0) + 1 }))
+        void $.ui.open({ id: PANE, title: 'Image' })
+        viewer = e.display === 'render' ? images : []
+      }
+    }
+    if (viewer.length) {
       try {
-        await $.process.run(['open', ...images], { timeoutMs: 5_000 })
+        await $.process.run(['open', ...viewer], { timeoutMs: 5_000 })
       } catch {
         // open is missing or refused: the file still reached the user.
       }
     }
     return sent
+  })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const { Box, Text, Image } = $.ui.resolve(e)
+    const p = await read($, picture)
+    if (!p) return <Text dimColor>No image yet.</Text>
+    const columns = Math.max(10, Math.min(120, (e.viewport?.columns ?? 60) - 2))
+    const rows = Math.max(4, Math.min(60, (e.viewport?.rows ?? 24) - 4))
+    return (
+      <Box flexDirection="column">
+        <Text dimColor>{p.name}</Text>
+        <Image key="view" source={{ file: p.file, format: 'png', generation: p.n }} columns={columns} rows={rows} alt={p.name} />
+      </Box>
+    )
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {

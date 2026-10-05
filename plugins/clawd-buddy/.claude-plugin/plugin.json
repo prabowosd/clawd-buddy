@@ -1,6 +1,6 @@
 {
   "name": "clawd-buddy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A small Claude Code mascot above the prompt, with usage, context, cache, directory and git status",
   "author": { "name": "Satrio Dwi Prabowo", "url": "https://github.com/prabowosd" },
   "repository": "https://github.com/prabowosd/clawd-buddy",
