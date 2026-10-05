@@ -50,6 +50,10 @@ The mascot has three moods: idle (blinks every couple of seconds), working (wave
 - The band steps aside while Claude Code is showing a survey.
 - The font needs the block elements and box drawing ranges (U+2580 and U+2500). Most terminal fonts have them.
 
+## Images
+
+When Claude sends you an image with the `SendUserFile` tool, the plugin opens it in the default viewer with `open`, so on macOS it lands in Preview. PNG, JPEG, GIF, WebP, HEIC, BMP and TIFF count, at most five per call. Other files are left alone. If `open` is missing or fails the file still reaches you and nothing is shown. Only images sent after the tool call succeeds are opened.
+
 ## Layout
 
 ```
@@ -60,6 +64,7 @@ plugins/clawd-buddy/
   hooks/sprite.ts                   the mascot frames
   hooks/stats.ts                    bars, colours, the clock
   hooks/git.ts                      git and worktree parsing
+  hooks/images.ts                   which sent files count as images
   hooks/*.test.ts                   tests
   types/index.d.ts                  state types
 ```

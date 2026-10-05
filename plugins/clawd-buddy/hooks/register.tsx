@@ -3,6 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Ctx, GitInfo, Limit, Mood } from '../types'
 import { parseGit, parseWorktree, shortPath } from './git'
+import { imagesToOpen } from './images'
 import { BODY_W, sprite } from './sprite'
 import { AMBER, GREEN, bar, clockText, levelColor } from './stats'
 
@@ -76,6 +77,20 @@ export const register: Register = on => {
     await update($, mood, () => (e.isAborted || e.reason === 'error' ? 'idle' : 'done') as Mood)
     void refreshGit($)
     return next(e)
+  })
+
+  // Images Claude sends to the user open in the default viewer. Best effort: no viewer, no harm.
+  on('tool.call', { tool: 'SendUserFile' }, async ($, e, next) => {
+    const sent = await next(e)
+    const images = imagesToOpen(e.files)
+    if (sent.deny === undefined && sent.isError !== true && images.length) {
+      try {
+        await $.process.run(['open', ...images], { timeoutMs: 5_000 })
+      } catch {
+        // open is missing or refused: the file still reached the user.
+      }
+    }
+    return sent
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
