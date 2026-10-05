@@ -36,3 +36,16 @@ test('the image pane says so when nothing was sent yet', async $ => {
   expect(await ui.find({ type: 'Text', text: /No image yet/ })).toBeDefined()
   await ui.unmount()
 })
+
+test('the band shows the effort a classic hook reports', async ($, on) => {
+  on('classic.PostToolUse', async () => ({}) as never)
+  await $.classic.PostToolUse({ tool_name: 'Bash', tool_input: {}, tool_response: {}, tool_use_id: 't1', effort: { level: 'medium' } } as never)
+  const ui = await $.ui.mount({
+    plugin: 'clawd-buddy',
+    surface: 'terminal',
+    component: 'AbovePrompt',
+    props: { hasSurvey: false, isWorking: false, maxRows: 3 } as never,
+  })
+  expect(await ui.find({ type: 'Text', text: /medium/ })).toBeDefined()
+  await ui.unmount()
+})

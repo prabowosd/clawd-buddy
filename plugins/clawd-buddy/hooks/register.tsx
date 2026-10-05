@@ -55,6 +55,11 @@ async function refreshModel($: EngineInterface) {
   }
 }
 
+// Only the main loop sets the effort shown; a subagent's own level is left out.
+async function noteEffort($: EngineInterface, level: string | undefined, agentId: string | undefined) {
+  if (level && !agentId) await update($, effort, () => level)
+}
+
 async function terminalDraws($: EngineInterface) {
   try {
     const r = await $.process.run(['sh', '-c', 'printf "%s|%s|%s|%s" "$TERM_PROGRAM" "$TERM" "$KITTY_WINDOW_ID" "$CLAWD_BUDDY_IMAGES"'], { timeoutMs: 2_000 })
@@ -108,6 +113,17 @@ export const register: Register = on => {
   on('turn.step', async function* ($, e, next) {
     if (!e.agentId && e.effort !== undefined) await update($, effort, () => String(e.effort))
     return yield* next(e)
+  })
+
+  // A second source: the classic hooks carry the effective level too, after any downgrade for the model.
+  on('classic.PostToolUse', async ($, e, next) => {
+    await noteEffort($, e.effort?.level, e.agent_id)
+    return next(e)
+  })
+
+  on('classic.Stop', async ($, e, next) => {
+    await noteEffort($, e.effort?.level, e.agent_id)
+    return next(e)
   })
 
   on('turn.start', async ($, e, next) => {
@@ -197,10 +213,10 @@ export const register: Register = on => {
     const effortName = await read($, effort)
     const detail = [c?.window ? windowText(c.window) : '', effortName].filter(Boolean).join(' · ')
     const modelText =
-      modelName === '' ? null : (
+      modelName === '' && detail === '' ? null : (
         <Text>
-          <Text color={BODY}>{shortModel(modelName)}</Text>
-          {detail === '' ? null : <Text dimColor> · {detail}</Text>}
+          <Text color={BODY}>{modelName === '' ? '' : shortModel(modelName)}</Text>
+          {detail === '' ? null : <Text dimColor>{modelName === '' ? detail : ` · ${detail}`}</Text>}
         </Text>
       )
     const isClean = g !== null && g.staged + g.modified + g.untracked === 0
